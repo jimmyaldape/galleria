@@ -1,0 +1,62 @@
+name: php8.0
+
+on: [pull_request]
+
+jobs:
+  test:
+    runs-on: ${{matrix.os}}
+    strategy:
+      fail-fast: true
+      matrix:
+        os: [ubuntu-latest]
+        php: [8.0]
+        dependency-version: [prefer-dist]
+
+    name: PHP${{ matrix.php }} - pest - ${{ matrix.os }}
+    env:
+      APP_KEY: base64:qwFLCFkaslv8bi8OXhSey3EgeZ6niJjPkT2Ym5SvI0I=
+      APP_ENV: testing
+      BCRYPT_ROUNDS: 4
+      CACHE_DRIVER: array
+      DB_CONNECTION: sqlite
+      DB_DATABASE: ":memory:"
+      SESSION_DRIVER: array
+      QUEUE_CONNECTION: sync
+      MAIL_MAILER: array
+      TELESCOPE_ENABLED: false
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v2
+
+      - name: Setup PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: ${{ matrix.php }}
+          extensions: dom, curl, libxml, mbstring, zip, pcntl, pdo, sqlite, pdo_sqlite, bcmath, soap, intl, gd, exif, iconv, imagick
+          coverage: none
+
+      - name: Cache composer dependencies
+        uses: actions/cache@v2
+        with:
+          path: vendor
+          key: composer-${{ hashFiles('composer.lock') }}
+
+      - name: Install composer dependencies
+        env:
+          APP_ENV: testing
+        run: |
+          composer self-update
+          composer install --${{ matrix.dependency-version }} --no-interaction
+      - name: Run migrations
+        run: php artisan migrate --env=testing --no-interaction -vvv
+
+      - name: Run pest tests
+        run: php artisan test
+
+      - name: Upload artifacts
+        uses: actions/upload-artifact@master
+        if: failure()
+        with:
+          name: Logs
+          path: ./storage/logs
