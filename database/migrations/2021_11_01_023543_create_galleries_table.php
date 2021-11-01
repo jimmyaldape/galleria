@@ -19,6 +19,7 @@ class CreateGalleriesTable extends Migration
             $table->string('description')->nullable();
             $table->string('location')->nullable();
             $table->string('folder')->nullable();
+            $table->boolean('enabled')->default(1);
             $table->timestamps();
         });
     }

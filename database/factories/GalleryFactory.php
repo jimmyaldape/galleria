@@ -18,6 +18,7 @@ class GalleryFactory extends Factory
             'name' => Str::ucfirst($this->faker->word),
             'description' => $this->faker->optional->sentence,
             'location' => $this->faker->optional->city,
+            'enabled' => true,
         ];
     }
 
@@ -25,6 +26,13 @@ class GalleryFactory extends Factory
     {
         return $this->state([
             'folder' => $folderName
+        ]);
+    }
+
+    public function enabled(bool $isGalleryEnabled = true)
+    {
+        return $this->state([
+            'enabled' => $isGalleryEnabled
         ]);
     }
 }
